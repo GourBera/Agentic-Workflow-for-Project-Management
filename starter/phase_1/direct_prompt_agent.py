@@ -11,8 +11,8 @@ from workflow_agents.base_agents import DirectPromptAgent
 # Load environment variables from .env file
 load_dotenv()
 
-# Load the API key (not needed for local Ollama, but kept for compatibility)
-api_key = os.getenv("OPENAI_API_KEY", "not-needed-for-local-model")
+# Load the API key
+api_key = os.getenv("OPENAI_API_KEY")
 
 prompt = "What is the Capital of France?"
 
@@ -26,4 +26,8 @@ direct_agent_response = direct_agent.respond(prompt)
 print(direct_agent_response)
 
 # Print an explanatory message describing the knowledge source
-print("\nNote: This response was generated using a locally hosted Qwen2.5 model via Ollama, not from an external API.")
+# The DirectPromptAgent uses general knowledge from the gpt-3.5-turbo LLM model.
+# No system prompt or additional context is provided — the model relies entirely
+# on its pre-trained knowledge to answer the question.
+print("\nKnowledge source: The agent uses the general knowledge of the gpt-3.5-turbo model.")
+print("No system prompt or additional context is provided.")

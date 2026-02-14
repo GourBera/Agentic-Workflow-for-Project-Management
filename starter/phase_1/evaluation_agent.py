@@ -10,7 +10,7 @@ from workflow_agents.base_agents import EvaluationAgent, KnowledgeAugmentedPromp
 # Load environment variables
 load_dotenv()
 
-api_key = os.getenv("OPENAI_API_KEY", "not-needed-for-local-model")
+api_key = os.getenv("OPENAI_API_KEY")
 prompt = "What is the capital of France?"
 
 # Parameters for the Knowledge Agent

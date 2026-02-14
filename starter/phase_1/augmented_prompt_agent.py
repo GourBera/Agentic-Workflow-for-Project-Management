@@ -11,7 +11,7 @@ from workflow_agents.base_agents import AugmentedPromptAgent
 load_dotenv()
 
 # Retrieve API key from environment variables (not needed for local model but kept for compatibility)
-api_key = os.getenv("OPENAI_API_KEY", "not-needed-for-local-model")
+api_key = os.getenv("OPENAI_API_KEY")
 
 prompt = "What is the capital of France?"
 persona = "You are a college professor; your answers always start with: 'Dear students,'"
