@@ -1,5 +1,5 @@
 numpy
 openai
 pandas==2.2.3
-litellm==1.51.0
+litellm==1.61.15
 python-dotenv==1.1.0
