@@ -40,6 +40,30 @@ You will deliver a two-part solution:
     6.  Simulate a **Development Engineer** team (a `KnowledgeAugmentedPromptAgent` for creating detailed engineering tasks, paired with an `EvaluationAgent` to ensure tasks meet criteria like task IDs, descriptions, acceptance criteria, and estimations).
     7.  Produce a final, structured output representing the comprehensively planned project (for the Email Router), demonstrating the workflow's capability.
 
+  ## Running Phase 1 Scripts
+
+  From the project root, run each Phase 1 script directly to validate agent behavior and capture outputs:
+
+  ```
+  python starter/phase_1/direct_prompt_agent.py
+  python starter/phase_1/augmented_prompt_agent.py
+  python starter/phase_1/knowledge_augmented_prompt_agent.py
+  python starter/phase_1/rag_knowledge_prompt_agent.py
+  python starter/phase_1/evaluation_agent.py
+  python starter/phase_1/routing_agent.py
+  python starter/phase_1/action_planning_agent.py
+  ```
+
+  ## Tests and Structured Outputs
+
+  Run unit tests for routing and evaluation logic:
+
+  ```
+  python -m unittest discover -s starter/phase_1/tests
+  ```
+
+  Evaluation and action planning use JSON-structured outputs for reliability. If the model returns non-JSON, the system falls back to parsing plain text so the workflow can still proceed.
+
 ## Project Submission
 
 At the end of the project, you will need to submit the following documents for review:
