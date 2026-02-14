@@ -1,6 +1,10 @@
-from workflow_agents.base_agents import RAGKnowledgePromptAgent
 import os
+import sys
 from dotenv import load_dotenv
+
+# Add the parent directory to the path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from workflow_agents.base_agents import RAGKnowledgePromptAgent
 
 # Load environment variables from .env file
 load_dotenv()

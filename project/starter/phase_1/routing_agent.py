@@ -11,7 +11,7 @@ from workflow_agents.base_agents import KnowledgeAugmentedPromptAgent, RoutingAg
 # Load environment variables from .env file
 load_dotenv()
 
-api_key = os.getenv("OPENAI_API_KEY", "not-needed-for-local-model")
+api_key = os.getenv("OPENAI_API_KEY")
 
 persona = "You are a college professor"
 

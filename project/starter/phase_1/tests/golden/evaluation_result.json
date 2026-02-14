@@ -1,8 +1,0 @@
-{
-  "iterations": 2,
-  "final_response": "draft answer",
-  "evaluation": {
-    "passes": true,
-    "reason": "ok"
-  }
-}

@@ -11,7 +11,7 @@ from workflow_agents.base_agents import KnowledgeAugmentedPromptAgent
 load_dotenv()
 
 # Define the parameters for the agent
-api_key = os.getenv("OPENAI_API_KEY", "not-needed-for-local-model")
+api_key = os.getenv("OPENAI_API_KEY")
 
 prompt = "What is the capital of France?"
 

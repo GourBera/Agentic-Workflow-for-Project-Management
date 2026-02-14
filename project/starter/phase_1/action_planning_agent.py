@@ -1,5 +1,6 @@
 # Import all required libraries
 import os
+import re
 import sys
 from dotenv import load_dotenv
 
@@ -10,7 +11,7 @@ from workflow_agents.base_agents import ActionPlanningAgent
 # Load environment variables
 load_dotenv()
 
-api_key = os.getenv("OPENAI_API_KEY", "not-needed-for-local-model")
+api_key = os.getenv("OPENAI_API_KEY")
 
 knowledge = """
 # Fried Egg
@@ -51,4 +52,6 @@ response = action_planning_agent.extract_steps_from_prompt(prompt)
 print(f"Prompt: {prompt}")
 print(f"Steps extracted by ActionPlanningAgent:")
 for i, step in enumerate(response, 1):
-    print(f"{i}.{step}")
+    # Strip any leading numbering the LLM may have included (e.g. "1. ")
+    clean_step = re.sub(r'^\d+[\.\)]\s*', '', step)
+    print(f"{i}. {clean_step}")

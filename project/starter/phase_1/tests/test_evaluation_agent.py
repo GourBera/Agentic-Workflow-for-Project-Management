@@ -2,6 +2,7 @@ import json
 import os
 import sys
 import unittest
+from unittest.mock import patch, MagicMock
 
 TEST_DIR = os.path.dirname(os.path.abspath(__file__))
 PHASE_DIR = os.path.dirname(TEST_DIR)
@@ -11,41 +12,17 @@ from workflow_agents import base_agents
 
 
 class _FakeWorker:
+    """Fake worker agent that returns a fixed response."""
     def respond(self, prompt):
         return "draft answer"
 
 
-class _FakeChoice:
-    def __init__(self, content):
-        self.message = type("_Message", (), {"content": content})()
-
-
-class _FakeResponse:
-    def __init__(self, content):
-        self.choices = [_FakeChoice(content)]
-
-
 class TestEvaluationAgent(unittest.TestCase):
-    def setUp(self):
-        self.original_completion = base_agents._completion
+    """Unit tests for the EvaluationAgent using mocked LLM responses."""
 
-        self._responses = iter(
-            [
-                _FakeResponse('{"passes": false, "reason": "missing format"}'),
-                _FakeResponse('{"instructions": "use the required format"}'),
-                _FakeResponse('{"passes": true, "reason": "ok"}'),
-            ]
-        )
-
-        def fake_completion(*args, **kwargs):
-            return next(self._responses)
-
-        base_agents._completion = fake_completion
-
-    def tearDown(self):
-        base_agents._completion = self.original_completion
-
-    def test_evaluation_flow(self):
+    @patch("workflow_agents.base_agents.OpenAI")
+    def test_evaluation_flow(self, mock_openai_cls):
+        """Evaluator iterates until the response passes criteria."""
         worker = _FakeWorker()
         evaluator = base_agents.EvaluationAgent(
             "dummy-key",
@@ -54,15 +31,35 @@ class TestEvaluationAgent(unittest.TestCase):
             worker,
             5,
         )
+
+        # Create mock responses for the evaluator's LLM calls:
+        # Iteration 1: evaluation = "No, missing format", then correction instructions
+        # Iteration 2: evaluation = "Yes, looks good"
+        mock_eval_fail = MagicMock()
+        mock_eval_fail.choices = [MagicMock(message=MagicMock(content="No, missing format"))]
+
+        mock_instructions = MagicMock()
+        mock_instructions.choices = [MagicMock(message=MagicMock(content="Fix: use the required format"))]
+
+        mock_eval_pass = MagicMock()
+        mock_eval_pass.choices = [MagicMock(message=MagicMock(content="Yes, looks good"))]
+
+        evaluator.client = MagicMock()
+        evaluator.client.chat.completions.create.side_effect = [
+            mock_eval_fail,       # Iteration 1 - evaluation
+            mock_instructions,    # Iteration 1 - correction instructions
+            mock_eval_pass,       # Iteration 2 - evaluation
+        ]
+
         result = evaluator.evaluate("write a formatted answer")
 
-        golden_path = os.path.join(os.path.dirname(__file__), "golden", "evaluation_result.json")
-        with open(golden_path, "r", encoding="utf-8") as golden_file:
-            golden = json.load(golden_file)
+        evaluation_path = os.path.join(os.path.dirname(__file__), "evaluation", "evaluation_result.json")
+        with open(evaluation_path, "r", encoding="utf-8") as evaluation_file:
+            evaluation = json.load(evaluation_file)
 
-        self.assertEqual(result["iterations"], golden["iterations"])
-        self.assertEqual(result["evaluation"], golden["evaluation"])
-        self.assertEqual(result["final_response"], golden["final_response"])
+        self.assertEqual(result["iterations"], evaluation["iterations"])
+        self.assertEqual(result["evaluation"], evaluation["evaluation"])
+        self.assertEqual(result["final_response"], evaluation["final_response"])
 
 
 if __name__ == "__main__":

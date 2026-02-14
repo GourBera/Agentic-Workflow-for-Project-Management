@@ -12,8 +12,8 @@ from workflow_agents.base_agents import ActionPlanningAgent, KnowledgeAugmentedP
 # Load environment variables
 load_dotenv()
 
-# Load the OpenAI key (not needed for local model but kept for compatibility)
-api_key = os.getenv("OPENAI_API_KEY", "not-needed-for-local-model")
+# Load the OpenAI key
+api_key = os.getenv("OPENAI_API_KEY")
 
 # Load the product spec document
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -92,34 +92,42 @@ def product_manager_support_function(query):
     """Support function for Product Manager - gets response and evaluates it."""
     print(f"  [Product Manager] Processing: {query[:80]}...")
     response = product_manager_knowledge_agent.respond(query)
-    return response
+    eval_result = product_manager_evaluation_agent.evaluate(response)
+    return eval_result['final_response']
 
 def program_manager_support_function(query):
     """Support function for Program Manager - gets response and evaluates it."""
     print(f"  [Program Manager] Processing: {query[:80]}...")
     response = program_manager_knowledge_agent.respond(query)
-    return response
+    eval_result = program_manager_evaluation_agent.evaluate(response)
+    return eval_result['final_response']
 
 def development_engineer_support_function(query):
     """Support function for Development Engineer - gets response and evaluates it."""
     print(f"  [Development Engineer] Processing: {query[:80]}...")
     response = development_engineer_knowledge_agent.respond(query)
-    return response
+    eval_result = development_engineer_evaluation_agent.evaluate(response)
+    return eval_result['final_response']
 
-# Simple routing function that routes to the most appropriate agent
-def simple_routing_function(step):
-    """Route the step to the most appropriate agent based on keywords."""
-    step_lower = step.lower()
-    
-    # Route to Development Engineer for task-related steps
-    if any(word in step_lower for word in ['task', 'develop', 'build', 'implement', 'code', 'estimate', 'effort']):
-        return development_engineer_support_function(step)
-    # Route to Program Manager for feature-related steps
-    elif any(word in step_lower for word in ['feature', 'group', 'organize', 'component']):
-        return program_manager_support_function(step)
-    # Default to Product Manager for story-related steps
-    else:
-        return product_manager_support_function(step)
+# Instantiate the Routing Agent with routes for each specialized role
+routing_agent = RoutingAgent(api_key, [])
+routing_agent.agents = [
+    {
+        "name": "Product Manager",
+        "description": "Responsible for defining product personas and user stories only. Does not define features or tasks. Does not group stories",
+        "func": lambda x: product_manager_support_function(x)
+    },
+    {
+        "name": "Program Manager",
+        "description": "Responsible for defining product features by grouping related user stories. Does not define stories or tasks.",
+        "func": lambda x: program_manager_support_function(x)
+    },
+    {
+        "name": "Development Engineer",
+        "description": "Responsible for defining engineering tasks for each user story. Does not define stories or features.",
+        "func": lambda x: development_engineer_support_function(x)
+    }
+]
 
 # Run the workflow
 
@@ -143,12 +151,12 @@ completed_steps = []
 for i, step in enumerate(workflow_steps, 1):
     print(f"--- Step {i}: {step[:100]}{'...' if len(step) > 100 else ''} ---")
     
-    # a. For each step, use simple routing to route the step to the appropriate support function
+    # Use the routing_agent to route the step to the appropriate support function
     try:
-        result = simple_routing_function(step)
-        print(f"Response: {result[:150]}{'...' if len(result) > 150 else ''}\n")
+        result = routing_agent.route(step)
+        print(f"Response: {result[:200]}{'...' if len(result) > 200 else ''}\n")
         
-        # b. Append the result to 'completed_steps'
+        # Append the result to 'completed_steps'
         completed_steps.append(result)
     except Exception as e:
         print(f"Error processing step: {e}\n")

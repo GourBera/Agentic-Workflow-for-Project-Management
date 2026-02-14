@@ -2,6 +2,7 @@ import json
 import os
 import sys
 import unittest
+from unittest.mock import patch, MagicMock
 
 TEST_DIR = os.path.dirname(os.path.abspath(__file__))
 PHASE_DIR = os.path.dirname(TEST_DIR)
@@ -11,9 +12,14 @@ from workflow_agents import base_agents
 
 
 class TestRoutingAgent(unittest.TestCase):
-    def setUp(self):
-        self.original_embedding = base_agents._embedding
+    """Unit tests for the RoutingAgent using mocked embeddings."""
 
+    @patch("workflow_agents.base_agents.OpenAI")
+    def test_route_selects_best_agent(self, mock_openai_cls):
+        """Routing selects the agent whose description is most similar."""
+        routing_agent = base_agents.RoutingAgent("dummy-key", [])
+
+        # Mock get_embedding on the instance to return deterministic vectors
         def fake_embedding(text):
             text_lower = text.lower()
             if "texas" in text_lower:
@@ -22,13 +28,8 @@ class TestRoutingAgent(unittest.TestCase):
                 return [0.0, 1.0]
             return [0.1, 0.1]
 
-        base_agents._embedding = fake_embedding
+        routing_agent.get_embedding = fake_embedding
 
-    def tearDown(self):
-        base_agents._embedding = self.original_embedding
-
-    def test_route_selects_best_agent(self):
-        routing_agent = base_agents.RoutingAgent("dummy-key", [])
         agents = [
             {
                 "name": "texas agent",
@@ -46,11 +47,11 @@ class TestRoutingAgent(unittest.TestCase):
         prompt = "Tell me about the history of Rome, Texas"
         response = routing_agent.route(prompt)
 
-        golden_path = os.path.join(os.path.dirname(__file__), "golden", "routing_result.json")
-        with open(golden_path, "r", encoding="utf-8") as golden_file:
-            golden = json.load(golden_file)
+        evaluation_path = os.path.join(os.path.dirname(__file__), "evaluation", "routing_result.json")
+        with open(evaluation_path, "r", encoding="utf-8") as evaluation_file:
+            evaluation = json.load(evaluation_file)
 
-        self.assertEqual(response, golden["response"])
+        self.assertEqual(response, evaluation["response"])
 
 
 if __name__ == "__main__":
