@@ -1,6 +1,16 @@
-# TODO: 1 - Import all required libraries, including the ActionPlanningAgent
+# Import all required libraries
+import os
+import sys
+from dotenv import load_dotenv
 
-# TODO: 2 - Load environment variables and define the openai_api_key variable with your OpenAI API key
+# Add the parent directory to the path to import the base agents
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from workflow_agents.base_agents import ActionPlanningAgent
+
+# Load environment variables
+load_dotenv()
+
+api_key = os.getenv("OPENAI_API_KEY", "not-needed-for-local-model")
 
 knowledge = """
 # Fried Egg
@@ -30,6 +40,15 @@ knowledge = """
 7. Peel and serve
 """
 
-# TODO: 3 - Instantiate the ActionPlanningAgent, passing the openai_api_key and the knowledge variable
+# Instantiate the ActionPlanningAgent with the knowledge
+action_planning_agent = ActionPlanningAgent(api_key, knowledge)
 
-# TODO: 4 - Print the agent's response to the following prompt: "One morning I wanted to have scrambled eggs"
+# Get the agent's response to the prompt
+prompt = "One morning I wanted to have scrambled eggs"
+response = action_planning_agent.extract_steps_from_prompt(prompt)
+
+# Print the agent's response
+print(f"Prompt: {prompt}")
+print(f"Steps extracted by ActionPlanningAgent:")
+for i, step in enumerate(response, 1):
+    print(f"{i}.{step}")
